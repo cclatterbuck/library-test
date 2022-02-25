@@ -8,7 +8,7 @@ date: '2022-02-25'
 
 ## Introduction
 
-This is a R Markdown document that quickly processes library items with errors at the UCSD Geisel Library. The goal of this project is to efficiently rearrange the necessary spreadsheets
+This is a R Markdown document that quickly processes library items with errors at the UCSD Geisel Library. The goal of this project is to efficiently rearrange the necessary spreadsheets & save them in a single file. 
 
 Project & file system setup are outlined in the ReadMe document within the library-test Github repository. If you have successfully cloned the Github repository & set up the file system in the ReadMe, then you are ready to use this document. 
 
@@ -25,16 +25,17 @@ knitr::opts_chunk$set(echo = TRUE)
 library(here)
 library(tidyverse)
 library(readxl)
+library(writexl)
 
 ```
 
 ### Step 2: load spreadsheets & select columns
 
-This step consists of 2 parts: **A.** listing the file path to all files that start with #1, #2, etc. and **B.** loading each group of files, binding them, and selecting the columns to keep.
+This step consists of 2 parts: **A.** listing the file path to all files that start with #1, #2, etc. and **B.** loading each group of files and binding them.
 
-**IMPORTANT:** Each time you run the script, make sure that here() is calling to the correct file folder, e.g., the correct date. This means double-checking the date within here() for each list. Otherwise, you might load the wrong set of files.
+**IMPORTANT:** Each time you run the script, make sure that here() is calling to the correct folder name, e.g., the correct date. This means double-checking the date/folder name within here() for each list. Otherwise, you might load the wrong set of files.
 
-If there are no files present for a particular list, the list will say "character (empty)" in the R Environment. Additionally, the code will throw an "Error: Can't subset columns that don't exist." for groups that have an empty list. That's okay, just move on and run the next group. Alternatively, you can only run the groups for which you have a matching list. 
+If there are no files present for a particular list, the list will say "character (empty)" in the R environment. A group created from an empty list of files will say "0 obs. of 0 variables" in the R environment. Groups that did have files present will have observations (rows) and variables (columns) present. 
 
 ```{r loadspreadsheets}
 
@@ -44,23 +45,31 @@ list3 <- list.files(path = here("rawdata", "20220218"), pattern = "#3", full.nam
 list4 <- list.files(path = here("rawdata", "20220218"), pattern = "#4", full.names = TRUE)
 list5 <- list.files(path = here("rawdata", "20220218"), pattern = "#5", full.names = TRUE)
 
-group1 <- map_df(list1, ~read_excel(path = .x, col_types = "text")) %>%
-  dplyr::select("Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
-group2 <- map_df(list2, ~read_excel(path = .x, col_types = "text")) %>%
-  dplyr::select("Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
-group3 <- map_df(list3, ~read_excel(path = .x, col_types = "text")) %>%
-  dplyr::select("Call Number", "Copy ID", Description, Title, Barcode, "Modification Date", "Process type", "Permanent Location")
-group4 <- map_df(list4, ~read_excel(path = .x, col_types = "text")) %>%
-  dplyr::select("Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
-group5 <- map_df(list5, ~read_excel(path = .x, col_types = "text")) %>%
-  dplyr::select("Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
+group1 <- map_df(list1, ~read_excel(path = .x, col_types = "text")) 
+group2 <- map_df(list2, ~read_excel(path = .x, col_types = "text"))
+group3 <- map_df(list3, ~read_excel(path = .x, col_types = "text")) 
+group4 <- map_df(list4, ~read_excel(path = .x, col_types = "text")) 
+group5 <- map_df(list5, ~read_excel(path = .x, col_types = "text"))
 
 ```
 
-If there are no files present for a particular group, the code will throw an "Error: Can't subset columns that don't exist." That's okay, just move on and run the next group. Alternatively, you can only run the groups for which you have a matching list. 
+### Step 3: select columns
+
+This step selects the columns for each group of files and puts them in the order listed in the code. 
+
+The code will throw an "Error: Can't subset columns that don't exist." for groups with 0 obs in the R environment. That's okay, just move on and run the next group. Alternatively, you can only run the groups for which observations are available.
+
+```{r selectcolumns, echo=FALSE}
+group1 <- dplyr::select(group1, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
+group2 <- dplyr::select(group2, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
+group3 <- dplyr::select(group3, "Call Number", "Copy ID", Description, Title, Barcode, "Modification Date", "Process type", "Permanent Location")
+group4 <- dplyr::select(group4, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
+group5 <- dplyr::select(group5, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
+```
 
 
-### Step 3: sort spreadsheets
+
+### Step 4: sort spreadsheets
 
 We can set a rule for how to sort the spreadsheets. 
 
@@ -68,7 +77,7 @@ We can set a rule for how to sort the spreadsheets.
 
 ```
 
-### Step 4: save spreadsheets
+### Step 5: save spreadsheets
 
 ```{r savespreadsheets, echo=FALSE}
 write_xlsx(list(group1, group2, group3, group4, group5), here("outputs", "CompiledRecords_20220218.xlsx"))
