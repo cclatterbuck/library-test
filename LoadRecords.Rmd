@@ -31,25 +31,35 @@ library(writexl)
 
 ### Step 2: load spreadsheets & select columns
 
-This step consists of 2 parts: **A.** listing the file path to all files that start with #1, #2, etc. and **B.** loading each group of files and binding them.
+This step consists of 2 parts: **A.** listing the file path to all files that start with #2, #3, etc. and **B.** loading each group of files, binding them, and adding a Section column based on the file name the corresponding row was loaded from.
 
-**IMPORTANT:** Each time you run the script, make sure that here() is calling to the correct folder name, e.g., the correct date. This means double-checking the date/folder name within here() for each list. Otherwise, you might load the wrong set of files.
+**IMPORTANT:** Each time you run the script, make sure that here() is calling to the correct folder name, e.g., the correct Range. This means double-checking the Range/folder name within here() for each list. Otherwise, you might load the wrong set of files.
 
-If there are no files present for a particular list, the list will say "character (empty)" in the R environment. A group created from an empty list of files will say "0 obs. of 0 variables" in the R environment. Groups that did have files present will have observations (rows) and variables (columns) present. 
+If there are no files present for a particular list, the list will say "character (empty)" in the R environment. As a result, R will throw an "Error: Can't subset columns that don't exist." when a group attempts to be made from an empty list. That is okay -- just move on and run the next group. Alternatively, you can only run the groups for which the corresponding list is not empty. 
 
 ```{r loadspreadsheets}
 
-list1 <- list.files(path = here("rawdata", "20220218"), pattern = "#1", full.names = TRUE)
-list2 <- list.files(path = here("rawdata", "20220218"), pattern = "#2", full.names = TRUE)
-list3 <- list.files(path = here("rawdata", "20220218"), pattern = "#3", full.names = TRUE)
-list4 <- list.files(path = here("rawdata", "20220218"), pattern = "#4", full.names = TRUE)
-list5 <- list.files(path = here("rawdata", "20220218"), pattern = "#5", full.names = TRUE)
+list2 <- list.files(path = here("rawdata", "Range38B"), pattern = "#2", full.names = TRUE)
+list3 <- list.files(path = here("rawdata", "Range38B"), pattern = "#3", full.names = TRUE)
+list5 <- list.files(path = here("rawdata", "Range38B"), pattern = "#5", full.names = TRUE)
+list6 <- list.files(path = here("rawdata", "Range38B"), pattern = "#6", full.names = TRUE)
 
-group1 <- map_df(list1, ~read_excel(path = .x, col_types = "text")) 
-group2 <- map_df(list2, ~read_excel(path = .x, col_types = "text"))
-group3 <- map_df(list3, ~read_excel(path = .x, col_types = "text")) 
-group4 <- map_df(list4, ~read_excel(path = .x, col_types = "text")) 
-group5 <- map_df(list5, ~read_excel(path = .x, col_types = "text"))
+group2 <- list2 %>%
+  set_names() %>% 
+  map_dfr(read_excel, .id = "source") %>%
+  mutate(Section = substr(sub(".*Section", "", source), 1, 2))
+group3 <- list3 %>%
+  set_names() %>% 
+  map_dfr(read_excel, .id = "source") %>%
+  mutate(Section = substr(sub(".*Section", "", source), 1, 2))
+group5 <- list5 %>%
+  set_names() %>% 
+  map_dfr(read_excel, .id = "source") %>%
+  mutate(Section = substr(sub(".*Section", "", source), 1, 2))
+group6 <- list6 %>%
+  set_names() %>% 
+  map_dfr(read_excel, .id = "source") %>%
+  mutate(Section = substr(sub(".*Section", "", source), 1, 2))
 
 ```
 
@@ -60,11 +70,10 @@ This step selects the columns for each group of files and puts them in the order
 The code will throw an "Error: Can't subset columns that don't exist." for groups with 0 obs in the R environment. That's okay, just move on and run the next group. Alternatively, you can only run the groups for which observations are available.
 
 ```{r selectcolumns, echo=FALSE}
-group1 <- dplyr::select(group1, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
-group2 <- dplyr::select(group2, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
-group3 <- dplyr::select(group3, "Call Number", "Copy ID", Description, Title, Barcode, "Modification Date", "Process type", "Permanent Location")
-group4 <- dplyr::select(group4, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
-group5 <- dplyr::select(group5, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location")
+group2 <- dplyr::select(group2, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location", Section)
+group3 <- dplyr::select(group3, "Call Number", "Copy ID", Description, Title, Barcode, "Modification Date", "Process type", "Permanent Location", Section)
+group5 <- dplyr::select(group5, "Call Number", "Copy ID", Description, Title, Barcode, "Permanent Location", Section)
+group6 <- dplyr::select(group6, Barcodes, Section)
 ```
 
 
@@ -79,6 +88,11 @@ We can set a rule for how to sort the spreadsheets.
 
 ### Step 5: save spreadsheets
 
+The write_xlsx function below makes each group a separate sheet in a new .xlsx file. Make sure to:
+
+1. Change the Range in the .xlsx file name to match the range in the file folder name you are working in (see Step 2 to confirm the Range you already selected)
+2. Only include groups in the list() that have observations in the R environment. e.g., if you were unable to make group5 in step 2 above, you would need to remove group5 from the code below.
+
 ```{r savespreadsheets, echo=FALSE}
-write_xlsx(list(group1, group2, group3, group4, group5), here("outputs", "CompiledRecords_20220218.xlsx"))
+write_xlsx(list(group2, group3, group5, group6), here("outputs", "CompiledRecords_Range38B.xlsx"))
 ```
