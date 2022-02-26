@@ -19,8 +19,8 @@ to run the code correctly.
 ## Weekly workflow
 
 1. Each week when you get new files to compile, create a new file folder in the 
-rawdata folder titled with the numeric year, month, and day (e.g., 20220218 for
-18 February 2022) and place the new files in that folder.
+rawdata folder titled with the with the Range (e.g., Range38B) and place the new 
+files in that folder.
 
 2. Open library-test.Rproj, which will open RStudio.
 
@@ -31,7 +31,8 @@ read through LoadRecords.Rmd before, do so now.
 file folder name you created above. 
 
 5. Run each code block using the green arrow. Remember, you may need to run
-each individual line in step 3 of LoadRecords. 
+each individual line in step 2 & 3 of LoadRecords. Also, you should only save
+groups in step 5 which actually have records.
 
 6. Look in the outputs folder to ensure the saved spreadsheets look correct.
 
